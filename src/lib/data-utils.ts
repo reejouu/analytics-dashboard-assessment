@@ -19,18 +19,27 @@ export async function fetchAllData(): Promise<DashboardData> {
 }
 
 async function fetchData<T>(url: string): Promise<T> {
-  // Ensure the URL is properly resolved for both server and client environments
-  const resolvedUrl = url.startsWith("http")
-    ? url
-    : typeof window === "undefined"
-    ? `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/${url.replace(/^\//, "")}`
-    : `${window.location.origin}/${url.replace(/^\//, "")}`;
+  try {
+    // Ensure the URL is properly resolved for both server and client environments
+    const resolvedUrl = url.startsWith("http")
+      ? url
+      : typeof window === "undefined"
+      ? `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000"}/${url}`
+      : `/${url}`;
 
-  const response = await fetch(resolvedUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch data from ${resolvedUrl}`);
+    console.log(`Fetching data from: ${resolvedUrl}`); // Debugging log
+
+    const response = await fetch(resolvedUrl);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching data from ${url}:`, error);
+    throw error;
   }
-  return response.json();
 }
 
 export function getTotalEVs(makeSummary: MakeSummary[]): number {
